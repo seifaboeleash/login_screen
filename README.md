@@ -68,7 +68,6 @@ flutter run
 ## Dependencies
 
 - `flutter_bloc` — state management
-- `equatable` — value equality for state classes
 - `flutter_screenutil` — responsive sizing
 
 ## Screenshots
