@@ -1,92 +1,82 @@
 # Flutter Login Screen
 
-A responsive, dark-mode login screen built with Flutter, Clean Architecture principles, Cubit state management, and `flutter_screenutil`.
+A responsive, dark-mode login screen built with Flutter, following Clean Architecture principles and Cubit for state management.
 
 ## Objective
 
-Build a polished, production-ready login UI that demonstrates:
+Build a responsive Flutter screen based on a self-designed UI, demonstrating clean folder structure, reusable widgets, and solid state management practices — without relying on any real backend (no API or Firebase integration; the login request is simulated).
 
-- **Dark Theme Aesthetics**: Sleek dark color palette with cohesive typography and subtle visual depth.
-- **Clean Architecture**: Domain-agnostic presentation layer cleanly divided into `cubit`, `pages`, and `widgets`.
-- **Responsive Design**: Standardized screen adaptation using `flutter_screenutil` with capped max-width behavior for wide viewports.
-- **Form Validation**: Strict email format and password rules managed via dedicated helper utilities.
-- **Cubit State Management**: Predictable, immutable state flow separating state and business logic from UI rendering.
+## Features
+
+- Dark mode UI with a custom color palette and typography system
+- Fully responsive layout (mobile and wider/tablet viewports) using `flutter_screenutil`
+- Form validation for email and password fields
+- Password visibility toggle
+- Loading state feedback on submit
+- Success/failure feedback via `SnackBar`
 
 ## Folder Structure
 
 ```
 lib/
 ├── core/
-│   ├── theme/          # AppColors, AppTextStyles, AppTheme
-│   └── utils/          # Shared validators (email, password)
+│   ├── constants/
+│   │   └── app_strings.dart       # Centralized string constants
+│   ├── theme/
+│   │   ├── app_colors.dart        # Color palette constants
+│   │   ├── app_text_styles.dart   # Reusable TextStyle definitions
+│   │   └── app_theme.dart         # ThemeData configuration
+│   └── utils/
+│       └── validators.dart        # Email/password validation logic
 ├── features/
 │   └── auth/
 │       └── presentation/
-│           ├── cubit/      # LoginCubit and LoginState
-│           ├── pages/      # LoginPage screen
-│           └── widgets/    # Reusable auth components (AuthHeader, CustomButton, CustomTextField)
-└── main.dart               # App entry point with ScreenUtilInit
+│           ├── cubit/
+│           │   ├── login_cubit.dart   # Business logic for the login flow
+│           │   └── login_state.dart   # Sealed state classes (Initial, Loading, Success, Failure)
+│           ├── pages/
+│           │   └── login_page.dart    # Login screen UI
+│           └── widgets/
+│               ├── auth_header.dart       # Title/subtitle header
+│               ├── custom_text_field.dart # Reusable styled text field
+│               ├── custom_button.dart     # Reusable loading-aware button
+│               ├── login_form.dart        # Form component for input handling
+│               └── sign_up_prompt.dart    # Registration prompt link
+└── main.dart
 ```
 
-| Folder / File Path | Purpose |
-|-------------------|---------|
-| [lib/core/theme/](file:///d:/Flutter/login_screen/lib/core/theme/) | Centralized dark color palette (`AppColors`), responsive typography constants (`AppTextStyles`), and MaterialApp ThemeData builder (`AppTheme`). |
-| [lib/core/utils/](file:///d:/Flutter/login_screen/lib/core/utils/) | Input validation helpers (`Validators`) for email and password field validation. |
-| [lib/features/auth/presentation/cubit/](file:///d:/Flutter/login_screen/lib/features/auth/presentation/cubit/) | State management layer holding `LoginCubit` and `LoginState` for async login simulation, status changes, and password visibility toggling. |
-| [lib/features/auth/presentation/pages/](file:///d:/Flutter/login_screen/lib/features/auth/presentation/pages/) | Main page screen (`LoginPage`) orchestrating responsive form layout and Cubit state consumption. |
-| [lib/features/auth/presentation/widgets/](file:///d:/Flutter/login_screen/lib/features/auth/presentation/widgets/) | Reusable UI widgets: `AuthHeader` (branding icon & header text), `CustomButton` (full-width button with progress indicator), and `CustomTextField` (styled input field). |
-
-## How to Run
-
-### Prerequisites
-
-- Flutter SDK (3.9+)
-- Dart SDK
-
-### Installation & Execution
-
-```bash
-# Fetch dependencies
-flutter pub get
-
-# Run the app locally
-flutter run
-```
-
-## Screenshots
-
-| Mobile Viewport (<600px) | Wide / Tablet Viewport (>600px) |
-|:------------------------:|:------------------------------:|
-| ![Login Screen Mobile](screenshots/login.png) | ![Login Screen Wide](screenshots/login_wide.png) |
+Each layer has a single responsibility: `core` holds app-wide styling and utilities shared across features, while `features/auth/presentation` isolates everything specific to the login screen. Splitting widgets into small, reusable components (`CustomTextField`, `CustomButton`, `AuthHeader`, `LoginForm`, `SignUpPrompt`) keeps `login_page.dart` focused on layout and composition rather than styling details.
 
 ## Architecture Notes
 
-### Why this folder structure?
-The codebase follows **Clean Architecture** conventions by organizing code by feature and layer:
-- **`core/`** isolates cross-cutting concerns (theming, validation) that can be shared across multiple features.
-- **`features/auth/presentation/`** encapsulates all presentation logic for authentication. This allows future expansion into `domain/` and `data/` layers without touching existing UI components.
+**Why Cubit?**
+Even without a real backend, separating the login logic (validation, simulated request, state transitions) from the widget keeps the UI dumb and the logic testable in isolation. Swapping the simulated `Future.delayed` call for a real API/Firebase call later only requires changing `LoginCubit.login()` — the UI stays untouched.
 
-### Why split widgets into reusable components?
-Extracting `AuthHeader`, `CustomButton`, and `CustomTextField` ensures:
-- **Single Responsibility**: Each widget manages only its immediate layout and rendering.
-- **Reusability**: Auth headers, text fields, and primary buttons can be re-used across registration, reset password, and onboarding screens.
-- **Testability & Maintainability**: Smaller widget trees make unit and widget testing straightforward and decrease cognitive load.
+**Why separate state classes instead of a single state + enum?**
+`LoginInitial`, `LoginLoading`, `LoginSuccess`, and `LoginFailure` each extend a common `LoginState` base class. This makes invalid states unrepresentable (e.g. you can't have a "success" state that also carries an error message) and reads clearly at the call site with `state is LoginFailure` checks.
 
-### Why Cubit?
-[Cubit](https://bloclibrary.dev/#/coreconcepts?id=cubit) offers a lightweight, state-driven model for UI presentation logic. It provides deterministic state transitions (`LoginInitial`, `LoginLoading`, `LoginSuccess`, `LoginFailure`) and manages UI flags (like password visibility) cleanly without requiring local widget state mutations.
+**Why flutter_screenutil?**
+Rather than manually computing breakpoints with `MediaQuery`, `flutter_screenutil` provides consistent `.w`/`.h`/`.sp` scaling based on a fixed design size, making spacing and font sizes scale predictably across device sizes.
 
-### Why `flutter_screenutil`?
-Using `flutter_screenutil` standardizes responsive scaling across varied device sizes. Scale extensions (`.w`, `.h`, `.sp`, `.r`) guarantee consistent proportions, readable typography, and identical visual balance on both compact phone screens and large wide displays.
+## Getting Started
+
+```bash
+flutter pub get
+flutter run
+```
 
 ## Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| `flutter_bloc` | Cubit state management |
-| `equatable` | Value equality for immutable state objects |
-| `flutter_screenutil` | Responsive design scaling |
-| `google_fonts` | Inter typography font loading |
+- `flutter_bloc` — state management
+- `equatable` — value equality for state classes
+- `flutter_screenutil` — responsive sizing
 
-## License
+## Screenshots
 
-This project is for demonstration purposes.
+| Mobile |
+|--------|
+| ![Login Screen](screenshots/login.png) |
+
+## Notes
+
+This task was built as a UI/architecture exercise — there is no real authentication backend. The login button simulates a network request with a short delay and always succeeds if the input passes validation.

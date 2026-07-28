@@ -1,27 +1,19 @@
 sealed class LoginState {
-  const LoginState({
-    required this.obscurePassword,
-  });
+  const LoginState({required this.obscurePassword});
 
   final bool obscurePassword;
 }
 
 final class LoginInitial extends LoginState {
-  const LoginInitial({
-    super.obscurePassword = true,
-  });
+  const LoginInitial({super.obscurePassword = true});
 }
 
 final class LoginLoading extends LoginState {
-  const LoginLoading({
-    required super.obscurePassword,
-  });
+  const LoginLoading({required super.obscurePassword});
 }
 
 final class LoginSuccess extends LoginState {
-  const LoginSuccess({
-    required super.obscurePassword,
-  });
+  const LoginSuccess({required super.obscurePassword});
 }
 
 final class LoginFailure extends LoginState {
