@@ -1,44 +1,34 @@
-import 'package:equatable/equatable.dart';
-
-/// Represents the current phase of the login flow.
-enum LoginStatus {
-  initial,
-  loading,
-  success,
-  failure,
-}
-
-/// Immutable state for the login screen, combining status and UI flags.
-///
-/// Uses a single state class with a [LoginStatus] enum rather than multiple
-/// state subclasses, keeping password visibility and error messages in one place.
-class LoginState extends Equatable {
+sealed class LoginState {
   const LoginState({
-    this.status = LoginStatus.initial,
-    this.obscurePassword = true,
-    this.errorMessage,
+    required this.obscurePassword,
   });
 
-  final LoginStatus status;
   final bool obscurePassword;
-  final String? errorMessage;
+}
 
-  bool get isLoading => status == LoginStatus.loading;
+final class LoginInitial extends LoginState {
+  const LoginInitial({
+    super.obscurePassword = true,
+  });
+}
 
-  LoginState copyWith({
-    LoginStatus? status,
-    bool? obscurePassword,
-    String? errorMessage,
-    bool clearErrorMessage = false,
-  }) {
-    return LoginState(
-      status: status ?? this.status,
-      obscurePassword: obscurePassword ?? this.obscurePassword,
-      errorMessage:
-          clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
-    );
-  }
+final class LoginLoading extends LoginState {
+  const LoginLoading({
+    required super.obscurePassword,
+  });
+}
 
-  @override
-  List<Object?> get props => [status, obscurePassword, errorMessage];
+final class LoginSuccess extends LoginState {
+  const LoginSuccess({
+    required super.obscurePassword,
+  });
+}
+
+final class LoginFailure extends LoginState {
+  const LoginFailure({
+    required this.errorMessage,
+    required super.obscurePassword,
+  });
+
+  final String errorMessage;
 }

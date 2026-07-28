@@ -2,13 +2,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:login_screen/core/utils/validators.dart';
 import 'package:login_screen/features/auth/presentation/cubit/login_state.dart';
 
-/// Manages login form state and simulates an authentication request.
 class LoginCubit extends Cubit<LoginState> {
-  LoginCubit() : super(const LoginState());
+  LoginCubit() : super(const LoginInitial());
 
-  /// Toggles password field visibility.
+  /// Toggles password field visibility while preserving the active state type.
   void togglePasswordVisibility() {
-    emit(state.copyWith(obscurePassword: !state.obscurePassword));
+    final newObscure = !state.obscurePassword;
+    final newState = switch (state) {
+      LoginInitial() => LoginInitial(obscurePassword: newObscure),
+      LoginLoading() => LoginLoading(obscurePassword: newObscure),
+      LoginSuccess() => LoginSuccess(obscurePassword: newObscure),
+      LoginFailure(:final errorMessage) => LoginFailure(
+          errorMessage: errorMessage,
+          obscurePassword: newObscure,
+        ),
+    };
+    emit(newState);
   }
 
   /// Validates credentials and simulates a login request.
@@ -21,38 +30,22 @@ class LoginCubit extends Cubit<LoginState> {
 
     if (emailError != null || passwordError != null) {
       emit(
-        state.copyWith(
-          status: LoginStatus.failure,
-          errorMessage: emailError ?? passwordError,
+        LoginFailure(
+          errorMessage: emailError ?? passwordError!,
+          obscurePassword: state.obscurePassword,
         ),
       );
       return;
     }
 
-    emit(
-      state.copyWith(
-        status: LoginStatus.loading,
-        clearErrorMessage: true,
-      ),
-    );
+    emit(LoginLoading(obscurePassword: state.obscurePassword));
 
     await Future<void>.delayed(const Duration(seconds: 1));
 
-    emit(
-      state.copyWith(
-        status: LoginStatus.success,
-        clearErrorMessage: true,
-      ),
-    );
+    emit(LoginSuccess(obscurePassword: state.obscurePassword));
   }
 
-  /// Resets status back to initial after handling side effects (e.g. SnackBar).
   void resetStatus() {
-    emit(
-      state.copyWith(
-        status: LoginStatus.initial,
-        clearErrorMessage: true,
-      ),
-    );
+    emit(LoginInitial(obscurePassword: state.obscurePassword));
   }
 }
